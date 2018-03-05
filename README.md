@@ -9,7 +9,7 @@ This is the first Perl script that I've ever written. I wrote it as a way to see
 > 
 > DESCRIPTION
 > This script checks a provided plaintext password against 
-> Troy Hunt's pwnedpasswords service. It computes the sha1 > hash 
+> Troy Hunt's pwnedpasswords service. It computes the sha1 hash 
 > of the password and separates the hash into prefix and suffix. 
 > The suffix is the first five characters of the hash, and it is 
 > sent to the server via HTTP GET request. The server replies 
