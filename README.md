@@ -37,6 +37,7 @@ See it go:
 
 ![See it go](img/pwnedpass_terminal_1.png)
 ![AND AGAIN](img/pwnedpass_terminal_2.png)
+![Finally! Good news](img/pwnedpass_terminal_3.png)
 
 TO DO:
 * Change -p behavior. 
