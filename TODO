@@ -1,0 +1,1 @@
+Change -p to optional (for scripting only). If the argument is not supplied, then prompt for password. This keeps plaintext passwords out of the terminal's history file.
