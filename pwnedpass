@@ -62,7 +62,12 @@ if ( $options{h} or not($options{p}) ){
          "         Optional. Dump variables when match is found.\n\n",
 
          "      -p PASSWORD\n",
-         "         Required. Password to test.\n\n",);
+         "         Required. Password to test. You need to adhere to \n",
+         "         your shell's special character handling. BASH, for \n",
+         "         example has all kinds of rules. Search its man page \n",
+         "         for the word \"mechanisms\" to find the relevant \n",
+         "         section. You can usually get away with using single \n",
+         "         quotes around the password\n\n");
 exit;
 }
 
