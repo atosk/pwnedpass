@@ -42,6 +42,4 @@ See it go:
 TO DO:
 * Change -p behavior. 
   - Currently, plaintext passwords get stored in the terminal's command history. The -p argument should be optional and used for scripting only. If -p is not provided, the user should be prompted for a password.
-* Uh. Special characters need some work.
-  - How did I not catch this?
-  - ![darn](img/pwnedpass_terminal_wtf.png)
+  
