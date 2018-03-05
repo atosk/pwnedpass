@@ -1,0 +1,152 @@
+#!/usr/bin/perl
+
+my $VERSION = "1.0";
+# 2018-03-04
+# 
+# Copyright (c) 2018 Jason Kappel
+
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# 'Software'), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+use LWP::Simple;
+use LWP::UserAgent;
+use Digest::SHA qw(sha1_hex);
+use Getopt::Std;
+use 5.010;
+
+
+# Handle arguements
+my %options=();
+getopts("vhsp:",\%options);
+
+if ( $options{h} or not($options{p}) ){
+   print("SYNOPSIS\n",
+         "   pwnedpass [OPTIONS] -p PASSWORD\n",
+         "\n",
+         "DESCRIPTION\n",
+         "This script checks a provided plaintext password against \n",
+         "Troy Hunt's pwnedpasswords service. It computes the sha1 hash \n",
+         "of the password and separates the hash into prefix and suffix. \n",
+         "The suffix is the first five characters of the hash, and it is \n",
+         "sent to the server via HTTP GET request. The server replies \n",
+         "with the suffix and occurance count for every hash in its \n",
+         "database that begins with the same suffix. In this way, your \n",
+         "password remains secure. \n\n",
+
+         "   Usage:\n\n",
+
+         "      -h\n",
+         "         Optional. Show this help.\n\n",
+
+         "      -s\n",
+         "         Optional. Show plaintext password in result\n",
+         "         (useful for scripting).\n\n",
+
+         "      -v \n",
+         "         Optional. Dump variables when match is found.\n\n",
+
+         "      -p PASSWORD\n",
+         "         Required. Password to test.\n\n",);
+exit;
+}
+
+
+# Check if -s flag was provided
+my $showpass;
+if ($options{s}) {$showpass = 1} else {$showpass = 0}
+
+# Check if -v flag was provided
+my $verbose;
+if ($options{v}) {$verbose = 1} else {$verbose = 0}
+
+
+# We get 403 response if User-Agent is not set
+my $browser = LWP::UserAgent->new;
+my @ns_headers = (
+   'User-Agent' => "pwnedpass perl script v$VERSION",
+   'Accept-Charset' => 'utf-8',
+   'Accept-Language' => 'en-US',
+  );
+
+
+# Variable Declarations
+my $test_suffix;  # Substring to compare against
+my $match = 0;    # Initial flag alue
+my $count;        # Number of occurrances
+
+
+# Process the provided password
+my $pass = $options{p};
+my $hashed_pass = uc sha1_hex($pass);
+my $prefix = substr($hashed_pass, 0, 5); # First five characters of hash
+my $suffix = substr($hashed_pass, 5,length($hashed_pass)); # Remainder of hash
+
+
+# Query the server
+my $url = 'https://api.pwnedpasswords.com/range';
+sleep 1; # Don't hammer the site if this is scripted
+my $response = $browser->get( "$url/$prefix" , @ns_headers);
+die "Can't get $url -- ", $response->status_line
+unless $response->is_success;
+
+
+# Split on new line. Store each line in array.
+my @results = split ("\n", $response->content);
+
+
+# Parse results looking matching suffix
+# If match is found, report number of occurances
+my $idx;
+my $matching_suffix;
+for (my $i = 0; $i <= ($#results); $i++) {
+   $test_suffix = (split(":",@results[$i]))[0];
+   if ($test_suffix eq $suffix) {
+      if ($verbose) { 
+         $matching_suffix = $test_suffix;
+         $idx = $i;
+      }
+      $count = (split(":",@results[$i]))[1];
+      $match = 1;
+   }
+}
+
+
+# Print result to terminal
+my $scary_header = "\n###############################\n\n";
+if ($match) {
+   print $scary_header;
+   print ("   Password Found!!\n   Number of occurances: $count\n");
+   print ("   Password: ");
+   if ($showpass){ print("$pass\n") } else {print("(use -s to show)\n")}
+   if ($verbose){
+      print ("\n",
+             "   Your Hash:  $hashed_pass\n",
+             "   Your Pefix: $prefix\n\n",
+             "   URL: $url/$prefix\n",
+             "   Matching Line: @results[$idx]\n",
+             "   Line Number: $idx \n\n",
+             "   Your suffix:     $suffix\n",
+             "   Matching suffix: $matching_suffix\n\n");
+   }
+   print $scary_header;
+   exit 1;
+} else {
+   print ("Password not found. Whew.\n");
+   exit 0;
+}
