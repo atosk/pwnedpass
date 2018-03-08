@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
-my $VERSION = "1.0";
-# 2018-03-04
+my $VERSION = "1.1";
+# 2018-03-05
 # 
 # Copyright (c) 2018 Jason Kappel
 
@@ -28,16 +28,19 @@ use LWP::Simple;
 use LWP::UserAgent;
 use Digest::SHA qw(sha1_hex);
 use Getopt::Std;
-use 5.010;
+use IO::Prompter;
+
+# If the password is echo'ed in plaintext when you enter it
+# interactively, then you need to install Term::ReadKey
 
 
 # Handle arguements
 my %options=();
 getopts("vhsp:",\%options);
 
-if ( $options{h} or not($options{p}) ){
+if ( $options{h} ){
    print("SYNOPSIS\n",
-         "   pwnedpass [OPTIONS] -p PASSWORD\n",
+         "   pwnedpass [OPTIONS]\n",
          "\n",
          "DESCRIPTION\n",
          "This script checks a provided plaintext password against \n",
@@ -59,15 +62,18 @@ if ( $options{h} or not($options{p}) ){
          "         (useful for scripting).\n\n",
 
          "      -v \n",
-         "         Optional. Dump variables when match is found.\n\n",
+         "         Optional. Dump variables.\n\n",
 
          "      -p PASSWORD\n",
-         "         Required. Password to test. You need to adhere to \n",
+         "         Optional. Password to test. You need to adhere to \n",
          "         your shell's special character handling. BASH, for \n",
          "         example has all kinds of rules. Search its man page \n",
          "         for the word \"mechanisms\" to find the relevant \n",
          "         section. You can usually get away with using single \n",
-         "         quotes around the password\n\n");
+         "         quotes around the password. **THIS IS MEANT TO BE CALLED \n",
+         "         FROM A SCRIPT** Using this switch directly from your \n",
+         "         terminal means your plaintext password will be saved in \n",
+         "         your command history file.\n\n");
 exit;
 }
 
@@ -96,8 +102,14 @@ my $match = 0;    # Initial flag alue
 my $count;        # Number of occurrances
 
 
-# Process the provided password
-my $pass = $options{p};
+# Process password
+my $pass;
+if ($options{p}) { # Pass was provided with -p option
+   $pass = $options{p};
+} else {
+   $pass = prompt('Enter Password: ', -echo=>''); # auto chomps
+   $pass =~ s/\r//; # Ugh. Windows. Ammirite?
+}
 my $hashed_pass = uc sha1_hex($pass);
 my $prefix = substr($hashed_pass, 0, 5); # First five characters of hash
 my $suffix = substr($hashed_pass, 5,length($hashed_pass)); # Remainder of hash
@@ -139,8 +151,14 @@ if ($match) {
    print ("   Password Found!!\n   Number of occurances: $count\n");
    print ("   Password: ");
    if ($showpass){ print("$pass\n") } else {print("(use -s to show)\n")}
-   if ($verbose){
+   print $scary_header;
+} else {
+   print ("Password not found. Whew.\n");
+}
+
+ if ($verbose){
       print ("\n",
+             "   Your Pass: $pass\n",
              "   Your Hash:  $hashed_pass\n",
              "   Your Pefix: $prefix\n\n",
              "   URL: $url/$prefix\n",
@@ -149,9 +167,5 @@ if ($match) {
              "   Your suffix:     $suffix\n",
              "   Matching suffix: $matching_suffix\n\n");
    }
-   print $scary_header;
-   exit 1;
-} else {
-   print ("Password not found. Whew.\n");
-   exit 0;
-}
+
+   if ($match) {exit 1} else {exit 0}
