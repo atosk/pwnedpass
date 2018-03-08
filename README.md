@@ -5,7 +5,7 @@
 This is the first Perl script that I've ever written. I wrote it as a way to see what this language is all about. And... If I'm being honest... To avoid working on a project for my DSP class.
 
 > SYNOPSIS
->    pwnedpass [OPTIONS] -p PASSWORD
+>    pwnedpass [OPTIONS]
 > 
 > DESCRIPTION
 > This script checks a provided plaintext password against 
@@ -27,19 +27,23 @@ This is the first Perl script that I've ever written. I wrote it as a way to see
 >          (useful for scripting).
 > 
 >       -v 
->          Optional. Dump variables when match is found.
+>          Optional. Dump variables.
 > 
 >       -p PASSWORD
->          Required. Password to test.
-> 
+>          Optional. Password to test. You need to adhere to 
+>          your shell's special character handling. BASH, for 
+>          example has all kinds of rules. Search its man page 
+>          for the word "mechanisms" to find the relevant 
+>          section. You can usually get away with using single 
+>          quotes around the password. **THIS IS MEANT TO BE CALLED 
+>          FROM A SCRIPT** Using this switch directly from your 
+>          terminal means your plaintext password will be saved in 
+>          your command history file.
 
 See it go:
-
+(note: These screen shots are out of date since v1.1)
 ![See it go](img/pwnedpass_terminal_1.png)
 ![AND AGAIN](img/pwnedpass_terminal_2.png)
 ![Finally! Good news](img/pwnedpass_terminal_3.png)
 
-TO DO:
-* Change -p behavior. 
-  - Currently, plaintext passwords get stored in the terminal's command history. The -p argument should be optional and used for scripting only. If -p is not provided, the user should be prompted for a password.
   
