@@ -41,7 +41,6 @@ This is the first Perl script that I've ever written. I wrote it as a way to see
 >          your command history file.
 
 See it go:
-(note: These screen shots are out of date since v1.1)
 ![See it go](img/pwnedpass_terminal_1.png)
 ![AND AGAIN](img/pwnedpass_terminal_2.png)
 ![Finally! Good news](img/pwnedpass_terminal_3.png)
